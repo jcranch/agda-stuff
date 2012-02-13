@@ -6,17 +6,19 @@ open import Relation.Binary.PropositionalEquality as PropEq using (_≡_ ; refl)
 
 open import Categories
 open import Functors
+open import NaturalTransformations
 
-private
-  data sum-set  {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {A : Set ℓ₁} {B : Set ℓ₂} (m : A → A → Set ℓ′₁) (n : B → B → Set ℓ′₂) : (A + B) → (A + B) → Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ′₁ ⊔ ℓ′₂) where
-    ssi₁ : (x : A) (y : A) (f : m x y) → sum-set m n (inj₁ x) (inj₁ y)
-    ssi₂ : (x : B) (y : B) (f : n x y) → sum-set m n (inj₂ x) (inj₂ y)
+
+
+data sum-hom  {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {A : Set ℓ₁} {B : Set ℓ₂} (m : A → A → Set ℓ′₁) (n : B → B → Set ℓ′₂) : (A + B) → (A + B) → Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ′₁ ⊔ ℓ′₂) where
+  ssi₁ : (x : A) (y : A) (f : m x y) → sum-hom m n (inj₁ x) (inj₁ y)
+  ssi₂ : (x : B) (y : B) (f : n x y) → sum-hom m n (inj₂ x) (inj₂ y)
 
 infixl 5 _⊎_
 _⊎_ :  {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} (C₁ : Category {ℓ₁} {ℓ′₁}) (C₂ : Category {ℓ₂} {ℓ′₂}) → Category {ℓ₁ ⊔ ℓ₂} {ℓ₁ ⊔ ℓ₂ ⊔ ℓ′₁ ⊔ ℓ′₂}
 makeCat obj₁ hom₁ id₁ compose₁ id-l₁ id-r₁ assoc₁ ⊎ makeCat obj₂ hom₂ id₂ compose₂ id-l₂ id-r₂ assoc₂ = makeCat obj hom id compose id-l id-r assoc where
   obj = obj₁ + obj₂
-  hom = sum-set hom₁ hom₂
+  hom = sum-hom hom₁ hom₂
   id : (x : obj) → hom x x
   id (inj₁ x) = ssi₁ x x (id₁ x)
   id (inj₂ y) = ssi₂ y y (id₂ y)

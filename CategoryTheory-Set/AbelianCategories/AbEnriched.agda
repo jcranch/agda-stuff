@@ -57,7 +57,7 @@ flip-bilinear (makeBilinear 0-left 0-right +-left +-right) =
                makeBilinear 0-right 0-left (λ x x′ y → +-right y x x′) (λ x y y′ → +-left y y′ x)
 
 
-
+{-
 module left-minus-axiom {c₁ ℓ₁ c₂ ℓ₂ c ℓ : Level}
   {A₁ : AbelianGroup c₁ ℓ₁}
   {A₂ : CommutativeMonoid c₂ ℓ₂}
@@ -88,7 +88,7 @@ module left-minus-axiom {c₁ ℓ₁ c₂ ℓ₂ c ℓ : Level}
     − ⟨ x , y ⟩ ∎ where open Relation.Binary.EqReasoning setoid
 
 open left-minus-axiom public
-
+-}
 
 
 -- similarly... or maybe using flip

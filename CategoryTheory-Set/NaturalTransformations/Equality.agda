@@ -11,26 +11,26 @@ open import NaturalTransformations
 
 
 infix 4 _≡₂_
-_≡₂_ : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
+_≡₂_ : {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ : Level}
        {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}}
        {F G : Functor C D} → Rel (NatTrans F G) (ℓ₁ ⊔ ℓ′₂)
 _≡₂_ {_} {_} {_} {_} {C} (makeNatTrans component _) (makeNatTrans component' _) = (x : Category.obj C) → component x ≡ component' x
 
 
-≡₂-refl : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
+≡₂-refl : {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ : Level}
          {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}}
          {F G : Functor C D} {Θ : NatTrans F G} → Θ ≡₂ Θ
 ≡₂-refl x = refl
 
 
-≡₂-sym : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
+≡₂-sym : {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ : Level}
          {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}}
          {F G : Functor C D}
          {Φ Ψ : NatTrans F G} → Φ ≡₂ Ψ → Ψ ≡₂ Φ
 ≡₂-sym E x = PropEq.sym (E x) 
 
 
-≡₂-trans : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
+≡₂-trans : {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ : Level}
          {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}}
          {F G : Functor C D}
          {Θ Φ Ψ : NatTrans F G} →
@@ -38,7 +38,7 @@ _≡₂_ {_} {_} {_} {_} {C} (makeNatTrans component _) (makeNatTrans component'
 ≡₂-trans E₁ E₂ x = PropEq.trans (E₁ x) (E₂ x)
 
 
-≡₂-isEquivalence : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
+≡₂-isEquivalence : {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ : Level}
          {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}}
          {F G : Functor C D} → IsEquivalence (_≡₂_ {F = F} {G = G})
 ≡₂-isEquivalence {ℓ₁} {ℓ₂} {ℓ′₁} {ℓ′₂} {C} {D} {F} {G} = record {
@@ -47,7 +47,7 @@ _≡₂_ {_} {_} {_} {_} {C} (makeNatTrans component _) (makeNatTrans component'
   trans = λ {Θ Φ Ψ : NatTrans F G} e₁ e₂ → ≡₂-trans {Θ = Θ} {Φ = Φ} {Ψ = Ψ} e₁ e₂ }
 
 
-NaturalTransformations : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
+NaturalTransformations : {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ : Level}
          {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}}
          (F G : Functor C D) → Setoid (ℓ₁ ⊔ ℓ₂ ⊔ ℓ′₁ ⊔ ℓ′₂) (ℓ₁ ⊔ ℓ′₂)
 NaturalTransformations F G = record {

@@ -1,7 +1,32 @@
+-- There are many ways of setting up the theory of limits (and there
+-- would be many more if we had functor categories, which are
+-- unavailable to us without passing to setoids of homomorphisms).
+
+-- The most highbrow is to treat them as right Kan extensions along
+-- projections to the terminal category. See "KanExtension" for
+-- code supporting this approach.
+
+-- A middlebrow approach, supported in this file, is the classical
+-- definition in terms of "cones" (implemented as natural
+-- transformations from constant functors).
+
+-- A lowbrow approach is to give explicit definitions for particular
+-- limit shapes, at the level of objects, homomorphisms and equations
+-- between composites. This is done in "Limits.Pullback" and other
+-- similar modules under Limits.
+
+-- It is desirable to have good comparison results, so that one
+-- can work in agreeably specific settings but call theorems that
+-- have been proved in generality. We have a good set of results
+-- passing between middle and low, but not yet between high and
+-- middle.
+
+
 module Limits where
 
 open import Data.Sum using (inj₁ ; inj₂)
 open import Data.Unit
+open import Function using (flip)
 open import Level
 open import Relation.Binary.PropositionalEquality
 
@@ -9,17 +34,12 @@ open import Categories
 open import Categories.Diagrams using (point)
 open import Categories.Join
 open import Functors
-open import Functors.Equality
+open import Functors.Isomorphism
+open import KanExtension
+open import Misc
 open import NaturalTransformations
-
-
-
--- to do
---   definitions of limits
---   explicit induced maps of cones
---   application to zero maps
-
-
+open import NaturalTransformations.Equality
+open existsUnique
 
 
 -- Cones can be thought of either as functors from a join category, or as natural tranformations from a constant functor
@@ -73,16 +93,101 @@ module cone-definitions-agree {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} (K : C
 
 open cone-definitions-agree public
 
-{-
 
-module limits {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
+
+record IsLimit {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ : Level}
   {K : Category {ℓ₁} {ℓ′₁}} {C : Category {ℓ₂} {ℓ′₂}}
-  (F : Functor K C) (x : Category.obj C) where
+  (F : Functor K C) (x : Category.obj C)
+  (Θ : NatTrans (constFunctor K C x) F) : Set (ℓ₁ ⊔ ℓ′₁ ⊔ ℓ₂ ⊔ ℓ′₂) where
 
-  IsLimit  (on a cone defined each of two ways)
+  constructor make-Limit
 
-  IsLimit = IsRightKanExtension (constFunctor K point tt) F (constFunctor point C x) ((and something representing the cone structure))
+  field
+    factorisations : (a : Category.obj C) (Ψ : NatTrans (constFunctor K C a) F) → existsUnique (Category.hom C a x) _≡_ (λ f → Ψ ≡₂ Θ •̂ constNatTrans f)
 
-open limits public
+  witnesses : (a : Category.obj C) (Ψ : NatTrans (constFunctor K C a) F) → Category.hom C a x
+  witnesses a Ψ = witness (factorisations a Ψ)
 
+  satisfactions : (a : Category.obj C) (Ψ : NatTrans (constFunctor K C a) F) → Ψ ≡₂ Θ •̂ constNatTrans (witnesses a Ψ)
+  satisfactions a Ψ = satisfaction (factorisations a Ψ)
+
+  uniquenesses : (a : Category.obj C) (Ψ : NatTrans (constFunctor K C a) F) (f : Category.hom C a x) → Ψ ≡₂ Θ •̂ constNatTrans f → f ≡ witnesses a Ψ
+  uniquenesses a Ψ = uniqueness (factorisations a Ψ)
+
+{-
+  as-KanExtension : IsRightKanExtension {ℓ₁} {ℓ′₁} {zero} {zero} {ℓ₂} {ℓ′₂} (constFunctor {ℓ₁} {ℓ′₁} {zero} {zero} K point tt) F (constFunctor point C x) (Θ •̂ ≅₁-to-NatTrans (const-≅₁-l (constFunctor K point tt) x))
+  as-KanExtension = make-RightKanExtension rke where
+    rke : (R′ : Functor point C) (Θ′ : NatTrans (R′ ⊙ constFunctor K point tt) F) → existsUnique (NatTrans R′ (constFunctor point C x)) (_≡₂_) (λ Φ → Θ′ ≡₂ Θ •̂ ≅₁-to-NatTrans (const-≅₁-l (constFunctor K point tt) x) •̂ (Φ ⊙̂ idNatTrans (constFunctor K point tt)))
+    rke R′ Θ′ = makeUnique W⁺ E⁺ U⁺ where
+      open ≡-Reasoning
+
+      W = witnesses
+      E = satisfactions
+      U = uniquenesses
+
+      Θ₀ = NatTrans.component Θ
+      Θ₁ : {a b : Category.obj K} (f : Category.hom K a b) → Category.compose C (Θ₀ b) (Category.id C x) ≡ Category.compose C (Functor.hom F f) (Θ₀ a)
+      Θ₁ = NatTrans.naturality Θ
+
+      P : NatTrans (constFunctor K C (Functor.obj R′ tt)) F
+      P = makeNatTrans (NatTrans.component Θ′) (λ {α} {β} f → trans (cong (Category.compose C (NatTrans.component Θ′ β)) (sym (Functor.id R′ tt))) (NatTrans.naturality Θ′ f))
+
+      W⁺ : NatTrans R′ (constFunctor point C x)
+      W⁺ = makeNatTrans component naturality where
+        component : (a : Category.obj point) → Category.hom C (Functor.obj R′ a) (Functor.obj (constFunctor point C x) a)
+        component tt = W (Functor.obj R′ tt) P
+        naturality : {α β : Category.obj point} (f : Category.hom point α β) → Category.compose C (component β) (Functor.hom R′ f) ≡ Category.compose C (Functor.hom (constFunctor point C x) f) (component α)
+        naturality tt = trans (trans (cong (Category.compose C _) (Functor.id R′ tt)) (Category.id-r C _)) (sym (Category.id-l C _))
+
+      E⁺ : Θ′ ≡₂ Θ •̂ ≅₁-to-NatTrans (const-≅₁-l (constFunctor K point tt) x) •̂ (W⁺ ⊙̂ idNatTrans (constFunctor K point tt))
+      E⁺ a = begin
+        NatTrans.component Θ′ a
+          ≡⟨ E (Functor.obj R′ tt) P a ⟩
+        Category.compose C (NatTrans.component Θ a) (W (Functor.obj R′ tt) (makeNatTrans (NatTrans.component Θ′) (λ {α} {β} f → trans (cong (Category.compose C (NatTrans.component Θ′ β)) (sym (Functor.id R′ tt))) (NatTrans.naturality Θ′ f))))
+          ≡⟨ cong (Category.compose C (NatTrans.component Θ a)) (sym (Category.id-r C _)) ⟩
+        Category.compose C (NatTrans.component Θ a) (Category.compose C (W (Functor.obj R′ tt) (makeNatTrans (NatTrans.component Θ′) (λ {α} {β} f → trans (cong (Category.compose C (NatTrans.component Θ′ β)) (sym (Functor.id R′ tt))) (NatTrans.naturality Θ′ f)))) (Category.id C (Functor.obj R′ tt)))
+          ≡⟨ cong (λ α → Category.compose C (NatTrans.component Θ a) (Category.compose C (W (Functor.obj R′ tt) (makeNatTrans (NatTrans.component Θ′) (λ {α} {β} f → trans (cong (Category.compose C (NatTrans.component Θ′ β)) (sym (Functor.id R′ tt)))  (NatTrans.naturality Θ′ f)))) α)) (sym (Functor.id R′ tt)) ⟩
+        Category.compose C (NatTrans.component Θ a) (Category.compose C (W (Functor.obj R′ tt) (makeNatTrans (NatTrans.component Θ′) (λ {α} {β} f → trans (cong (Category.compose C (NatTrans.component Θ′ β)) (sym (Functor.id R′ tt))) (NatTrans.naturality Θ′ f)))) (Functor.hom R′ tt))
+          ≡⟨ cong (flip (Category.compose C) _) (sym (Category.id-r C (NatTrans.component Θ a))) ⟩
+        Category.compose C (Category.compose C (NatTrans.component Θ a) (Category.id C x)) (Category.compose C (W (Functor.obj R′ tt) (makeNatTrans (NatTrans.component Θ′) (λ {α} {β} f → trans (cong (Category.compose C (NatTrans.component Θ′ β)) (sym (Functor.id R′ tt))) (NatTrans.naturality Θ′ f)))) (Functor.hom R′ tt)) ∎
+
+      U⁺ : (W′ : NatTrans R′ (constFunctor point C x)) → Θ′ ≡₂ Θ •̂ ≅₁-to-NatTrans (const-≅₁-l (constFunctor K point tt) x) •̂ (W′ ⊙̂ idNatTrans (constFunctor K point tt)) → W′ ≡₂ W⁺
+      U⁺ W′ e tt = U (Functor.obj R′ tt) P (NatTrans.component W′ tt) e′ where
+        e′ : (z : Category.obj K) → NatTrans.component Θ′ z ≡ Category.compose C (NatTrans.component Θ z) (NatTrans.component W′ tt)
+        e′ z = begin
+          NatTrans.component Θ′ z
+            ≡⟨ e z ⟩
+          Category.compose C (Category.compose C (NatTrans.component Θ z) (Category.id C x)) (Category.compose C (NatTrans.component W′ tt) (Functor.hom R′ tt))
+            ≡⟨ cong (λ α → Category.compose C α (Category.compose C (NatTrans.component W′ tt) (Functor.hom R′ tt))) (Category.id-r C (NatTrans.component Θ z)) ⟩
+          Category.compose C (NatTrans.component Θ z) (Category.compose C (NatTrans.component W′ tt) (Functor.hom R′ tt))
+            ≡⟨ cong (λ α → Category.compose C (NatTrans.component Θ z) (Category.compose C (NatTrans.component W′ tt) α)) (Functor.id R′ tt) ⟩
+          Category.compose C (NatTrans.component Θ z) (Category.compose C (NatTrans.component W′ tt) (Category.id C (Functor.obj R′ tt)))
+            ≡⟨ cong (Category.compose C (NatTrans.component Θ z)) (Category.id-r C _) ⟩
+          Category.compose C (NatTrans.component Θ z) (NatTrans.component W′ tt) ∎
 -}
+
+
+module kan-extension-vs-limit {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ : Level}
+  {K : Category {ℓ₁} {ℓ′₁}} {C : Category {ℓ₂} {ℓ′₂}}
+  (F : Functor K C) (x : Category.obj C)
+  (Θ : NatTrans (constFunctor K C x) F)
+  (rke : IsRightKanExtension (constFunctor K point tt) F (constFunctor point C x) (Θ •̂ ≅₁-to-NatTrans (const-≅₁-l (constFunctor K point tt) x))) where
+
+  open IsRightKanExtension rke
+
+{-
+  as-Limit : IsLimit F x Θ
+  as-Limit = make-Limit lim where
+    lim : (a : Category.obj C) (Ψ : NatTrans (constFunctor K C a) F) → existsUnique (Category.hom C a x) _≡_ (λ f → Ψ ≡₂ Θ •̂ constNatTrans f)
+    lim a Ψ = makeUnique W E U where
+      W : Category.hom C a x
+      W = {!witnesses (constFunctor point C a) Ψ!}
+
+      E : (x' : Category.obj K) → NatTrans.component Ψ x' ≡ NatTrans.component (Θ •̂ constNatTrans W) x'
+      E = {!!}
+
+      U : (a' : Category.hom C a x) → Ψ ≡₂ Θ •̂ constNatTrans a' → a' ≡ W
+      U = {!!}
+-}
+open kan-extension-vs-limit public
+

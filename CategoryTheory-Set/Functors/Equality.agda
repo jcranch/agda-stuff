@@ -6,8 +6,9 @@ open import Relation.Binary.PropositionalEquality
 
 open import Categories
 open import Functors
+open import Functors.Isomorphism
 open import ExtensionalEquality
-
+open import NaturalTransformations
 
 
 infix 4 _≡₁_
@@ -51,3 +52,21 @@ private
            {F G H : Functor C D} → F ≡₁ G → G ≡₁ H → F ≡₁ H
 ≡₁-trans {C = C} {D = D} (refl₁ α β) (refl₁ α′ β′) = refl₁ (λ x → trans (α x) (α′ x)) (λ {x} {y} f → ≡-subst₂-trans (Category.hom D) (α x) (α′ x) (α y) (α′ y) (β f) (β′ f))
 
+
+const-≡₁-l : {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ ℓ₃ ℓ′₃ : Level}
+  {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} {E : Category {ℓ₃} {ℓ′₃}}
+  (F : Functor C D) (x : Category.obj E) → constFunctor D E x ⊙ F ≡₁ constFunctor C E x
+const-≡₁-l (makeFunctor obj hom id compose) x = refl₁ (λ _ → refl) (λ _ → refl)
+
+const-≡₁-r : {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ ℓ₃ ℓ′₃ : Level}
+  {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} {E : Category {ℓ₃} {ℓ′₃}}
+  (F : Functor D E) (x : Category.obj D) → F ⊙ constFunctor C D x ≡₁ constFunctor C E (Functor.obj F x)
+const-≡₁-r (makeFunctor obj hom id compose) x = refl₁ (λ _ → refl) (λ _ → id x)
+
+
+≡₁-to-≅₁ : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
+  {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}}
+  {F : Functor C D} {G : Functor C D} → F ≡₁ G → F ≅₁ G
+≡₁-to-≅₁ {C = C} {D = D} {F = F} {G = G} (refl₁ obj hom) = make-≅₁ Θ {!!} where
+  Θ : NatTrans F G
+  Θ = makeNatTrans (λ x → subst (λ α → Category.hom D (Functor.obj F x) α) (obj x) (Category.id D (Functor.obj F x))) {!!}

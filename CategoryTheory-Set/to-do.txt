@@ -1,0 +1,4 @@
+
+Kan extensions
+adjunctions using comma categories
+colimits from Kan extensions

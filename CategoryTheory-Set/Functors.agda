@@ -9,7 +9,7 @@ open PropEq.≡-Reasoning
 open import Categories
 
 
-record Functor {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} (C : Category {ℓ₁} {ℓ′₁}) (D : Category {ℓ₂} {ℓ′₂}) : Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ′₁ ⊔ ℓ′₂) where
+record Functor {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ : Level} (C : Category {ℓ₁} {ℓ′₁}) (D : Category {ℓ₂} {ℓ′₂}) : Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ′₁ ⊔ ℓ′₂) where
   constructor makeFunctor
   field
     obj : Category.obj C → Category.obj D
@@ -22,11 +22,11 @@ idFunctor : {ℓ₁ ℓ′₁ : Level} (C : Category {ℓ₁} {ℓ′₁}) → F
 idFunctor C = makeFunctor (id-fun) (id-fun) (λ x → refl) (λ g f → refl)
 
 
-constFunctor : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} (C : Category {ℓ₁} {ℓ′₁}) (D : Category {ℓ₂} {ℓ′₂}) → Category.obj D → Functor C D
+constFunctor : {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ : Level} (C : Category {ℓ₁} {ℓ′₁}) (D : Category {ℓ₂} {ℓ′₂}) → Category.obj D → Functor C D
 constFunctor C D x = makeFunctor (λ _ → x) (λ _ → Category.id D x) (λ _ → refl) (λ g f → PropEq.sym (Category.id-l D (Category.id D x)))
 
 
-module functor-composition {ℓ₁ ℓ₂ ℓ₃ ℓ′₁ ℓ′₂ ℓ′₃ : Level} {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} {E : Category {ℓ₃} {ℓ′₃}} where
+module functor-composition {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ ℓ₃ ℓ′₃ : Level} {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} {E : Category {ℓ₃} {ℓ′₃}} where
   open Category C renaming (obj to obC ; hom to homC)
   open Category D renaming (id to id′ ; _•_ to _•′_)
   open Category E renaming (id to id″ ; _•_ to _•″_)

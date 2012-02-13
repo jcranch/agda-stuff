@@ -2,6 +2,7 @@ module Functors.Isomorphism where
 
 open import Level
 import Relation.Binary.EqReasoning
+open import Relation.Binary.PropositionalEquality
 
 open import Categories
 open import Functors
@@ -20,6 +21,12 @@ data Isomorphism₁ {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {C : Category {�
 infix 4 _≅₁_
 data _≅₁_ {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} (F G : Functor C D) : Set (ℓ₁ ⊔ ℓ₂ ⊔ ℓ′₁ ⊔ ℓ′₂) where
   make-≅₁ : (Θ : NatTrans F G) → Isomorphism₁ Θ → F ≅₁ G
+
+
+≅₁-to-NatTrans : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} {F G : Functor C D} → F ≅₁ G → NatTrans F G
+≅₁-to-NatTrans (make-≅₁ Θ _) = Θ
+≅₁-to-NatTrans⁻¹ : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} {F G : Functor C D} → F ≅₁ G → NatTrans G F
+≅₁-to-NatTrans⁻¹ (make-≅₁ Θ (makeIso₁ .Θ Θ⁻¹ _ _)) = Θ⁻¹
 
 
 inverse₁ : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} {F G : Functor C D} {Θ : NatTrans F G} → Isomorphism₁ Θ → NatTrans G F
@@ -113,4 +120,20 @@ open iso-to-iso public
 ≅₁-⊙-right G G′ F (make-≅₁ Θ I) = make-≅₁ (Θ ⊙̂ idNatTrans F) (Iso₁-⊙-right G G′ F I)
 
 
+const-≅₁-l : {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ ℓ₃ ℓ′₃ : Level}
+  {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} {E : Category {ℓ₃} {ℓ′₃}}
+  (F : Functor C D) (x : Category.obj E) → constFunctor D E x ⊙ F ≅₁ constFunctor C E x
+const-≅₁-l {C = C} {D = D} {E = E} (makeFunctor obj hom id compose) x = make-≅₁ Θ (makeIso₁ Θ Θ⁻¹ (λ _ → Category.id-l E (Category.id E x)) (λ _ → Category.id-l E (Category.id E x))) where
+  Θ : NatTrans (constFunctor D E x ⊙ makeFunctor obj hom id compose) (constFunctor C E x)
+  Θ = makeNatTrans (λ _ → Category.id E x) (λ _ → refl)
+  Θ⁻¹ : NatTrans (constFunctor C E x) (constFunctor D E x ⊙ makeFunctor obj hom id compose)
+  Θ⁻¹ = makeNatTrans (λ _ → Category.id E x) (λ _ → refl)
 
+const-≅₁-r : {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ ℓ₃ ℓ′₃ : Level}
+  {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} {E : Category {ℓ₃} {ℓ′₃}}
+  (F : Functor D E) (x : Category.obj D) → F ⊙ constFunctor C D x ≅₁ constFunctor C E (Functor.obj F x)
+const-≅₁-r {C = C} {D = D} {E = E} (makeFunctor obj hom id compose) x = make-≅₁ Θ (makeIso₁ Θ Θ⁻¹ (λ _ → Category.id-l E (Category.id E (obj x))) (λ _ → Category.id-l E (Category.id E (obj x)))) where
+  Θ : NatTrans (makeFunctor obj hom id compose ⊙ constFunctor C D x) (constFunctor C E (obj x))
+  Θ = makeNatTrans (λ _ → Category.id E (obj x)) (λ _ → cong (Category.compose E (Category.id E (obj x))) (id x))
+  Θ⁻¹ : NatTrans (constFunctor C E (obj x)) (makeFunctor obj hom id compose ⊙ constFunctor C D x)
+  Θ⁻¹ = makeNatTrans (λ _ → Category.id E (obj x)) (λ _ → cong (λ α → Category.compose E α (Category.id E (obj x))) (sym (id x)))

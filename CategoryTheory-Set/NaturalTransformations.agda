@@ -15,6 +15,20 @@ record NatTrans {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {C : Category {ℓ�
     naturality : {x y : Category.obj C} (f : Category.hom C x y) → Category.compose D (component y) (Functor.hom F f) ≡ Category.compose D (Functor.hom G f) (component x)
 
 
+-- this lemma observes that the naturality condition is always satisfied for identity maps
+naturality-for-identities : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} (F G : Functor C D) (x : Category.obj C) (φ : Category.hom D (Functor.obj F x) (Functor.obj G x)) → Category.compose D φ (Functor.hom F (Category.id C x)) ≡ Category.compose D (Functor.hom G (Category.id C x)) φ
+naturality-for-identities {C = C} {D = D} F G x φ = begin
+  Category.compose D φ (Functor.hom F (Category.id C x))
+    ≡⟨ cong (Category.compose D φ) (Functor.id F x) ⟩
+  Category.compose D φ (Category.id D (Functor.obj F x))
+    ≡⟨ Category.id-r D φ ⟩
+  φ
+    ≡⟨ sym (Category.id-l D φ) ⟩
+  Category.compose D (Category.id D (Functor.obj G x)) φ
+    ≡⟨ cong (λ α → Category.compose D α φ) (sym (Functor.id G x)) ⟩
+  Category.compose D (Functor.hom G (Category.id C x)) φ ∎
+
+
 
 module identity-natural-transformation {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} (F : Functor C D) where
 
@@ -123,3 +137,7 @@ open horizontal-composition public
 
 nat-trans-op : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} {F G : Functor C D} (Θ : NatTrans F G) → NatTrans (functor-op G) (functor-op F)
 nat-trans-op (makeNatTrans component naturality) = makeNatTrans component (λ f → sym (naturality f))
+
+
+constNatTrans : {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level} {C : Category {ℓ₁} {ℓ′₁}} {D : Category {ℓ₂} {ℓ′₂}} {x y : Category.obj D} (f : Category.hom D x y) → NatTrans (constFunctor C D x) (constFunctor C D y)
+constNatTrans {D = D} f = makeNatTrans (λ x → f) (λ g → PropEq.trans (Category.id-r D f) (sym (Category.id-l D f)))

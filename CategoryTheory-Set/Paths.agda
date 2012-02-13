@@ -8,7 +8,7 @@ open import Functors
 
 module paths {ℓ ℓ′ : Level} (C : Category {ℓ} {ℓ′}) where
 
-  open Category C
+  open Category C renaming (_•_ to _•′_)
 
   data Path : obj → obj → Set (ℓ ⊔ ℓ′)  where
     nil : (x : obj) → Path x x
@@ -16,15 +16,40 @@ module paths {ℓ ℓ′ : Level} (C : Category {ℓ} {ℓ′}) where
 
   composite : {x y : obj} → Path x y → hom x y
   composite (nil x) = id x
-  composite (cons P f) = composite P • f
+  composite (cons P f) = composite P •′ f
   
+  _≈_  : {x y : obj} (P Q : Path x y) → Set ℓ′
+  P ≈ Q = composite P ≡ composite Q
+
+  infix 5 [[_
+  [[_ = λ {x} {y} → composite {x} {y}
+  infix 6 _•_
+  _•_ = λ {x} {y} {z} → cons {x} {y} {z}
+  ]] = nil
+
+  infixl 5 _++_
   _++_ : {x y z : obj} → Path y z → Path x y → Path x z
   P ++ (nil x) = P
   P ++ cons Q f = cons (P ++ Q) f
 
-  composite-++ : {x y z : obj} (Q : Path y z) (P : Path x y) → composite (Q ++ P) ≡ composite Q • composite P
+  composite-++ : {x y z : obj} (Q : Path y z) (P : Path x y) → composite (Q ++ P) ≡ composite Q •′ composite P
   composite-++ Q (nil x) = sym (id-r (composite Q))
-  composite-++ Q (cons P f) = trans (cong (λ α → α • f) (composite-++ Q P)) (sym (assoc (composite Q) (composite P) f))
+  composite-++ Q (cons P f) = trans (cong (λ α → α •′ f) (composite-++ Q P)) (sym (assoc (composite Q) (composite P) f))
+
+  infixl 4 _≈_
+  ≈-cong : {x x′ y′ y : obj} {R : Path y′ y} {Q₁ Q₂ : Path x′ y′} {P : Path x x′} → Q₁ ≈ Q₂ → R ++ Q₁ ++ P ≈ R ++ Q₂ ++ P
+  ≈-cong {_} {_} {_} {_} {R} {Q₁} {Q₂} {P} e = begin
+    composite (R ++ Q₁ ++ P)
+      ≡⟨ composite-++ (R ++ Q₁) P ⟩
+    composite (R ++ Q₁) •′ composite P
+      ≡⟨ cong (λ x → x •′ composite P) (composite-++ R Q₁) ⟩
+    composite R •′ composite Q₁ •′ composite P
+      ≡⟨ cong (λ x → composite R •′ x •′ composite P) e ⟩
+    composite R •′ composite Q₂ •′ composite P
+      ≡⟨ cong (λ x → x •′ composite P) (sym (composite-++ R Q₂)) ⟩
+    composite (R ++ Q₂) •′ composite P
+      ≡⟨ sym (composite-++ (R ++ Q₂) P) ⟩
+    composite (R ++ Q₂ ++ P) ∎ where open ≡-Reasoning
 
   pathCategory : Category {ℓ} {ℓ ⊔ ℓ′}
   pathCategory = makeCat obj Path nil _++_ id-l′ id-r′ assoc′ where

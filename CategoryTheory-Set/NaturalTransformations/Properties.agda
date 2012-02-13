@@ -7,6 +7,7 @@ open PropEq.≡-Reasoning
 
 open import Categories
 open import Functors
+open import Functors.Composition
 open import NaturalTransformations
 open import NaturalTransformations.Equality
 
@@ -42,7 +43,7 @@ module id-nat-trans {ℓ₁ ℓ₂ ℓ₃ ℓ′₁ ℓ′₂ ℓ′₃ : Level}
 open id-nat-trans public
 
 
-module vertical-composition-unit {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
+module composition-unit {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
   {C : Category {ℓ₁} {ℓ′₁}}
   {D : Category {ℓ₂} {ℓ′₂}}
   {F G : Functor C D}
@@ -53,6 +54,7 @@ module vertical-composition-unit {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
     F₀ = Functor.obj F
     G₀ = Functor.obj G
     Θ₀ = NatTrans.component Θ
+    F₁ = λ {x} {y} f → Functor.hom F {x} {y} f
 
   •̂-unit-l : idNatTrans G •̂ Θ ≡₂ Θ
   •̂-unit-l x = begin
@@ -66,15 +68,29 @@ module vertical-composition-unit {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
       ≡⟨ id-r (Θ₀ x) ⟩
     Θ₀ x ∎
 
-  -- unit laws
+  ⊙̂-unit-l : ⊙-unitor-l G •̂ (idNatTrans (idFunctor D) ⊙̂ Θ) •̂ ⊙-unitor-l⁻¹ F ≡₂ Θ
+  ⊙̂-unit-l x = begin
+    (id (G₀ x) • (id (G₀ x) • Θ₀ x)) • id (F₀ x)
+      ≡⟨ id-r _ ⟩
+    id (G₀ x) • (id (G₀ x) • Θ₀ x)
+      ≡⟨ id-l _ ⟩
+    id (G₀ x) • Θ₀ x
+      ≡⟨ id-l _ ⟩
+    Θ₀ x ∎
 
-  --⊙̂-unit-l : idNatTrans (idFunctor D) ⊙̂ Θ ≡₂ Θ
-  --⊙̂-unit-l x = ?
+  ⊙̂-unit-r : ⊙-unitor-r G •̂ (Θ ⊙̂ idNatTrans (idFunctor C)) •̂ ⊙-unitor-r⁻¹ F ≡₂ Θ
+  ⊙̂-unit-r x = begin
+    (id (G₀ x) • (Θ₀ x • F₁ (Category.id C x))) • id (F₀ x)
+      ≡⟨ id-r _ ⟩
+    id (G₀ x) • (Θ₀ x • F₁ (Category.id C x))
+      ≡⟨ id-l _ ⟩
+    Θ₀ x • F₁ (Category.id C x)
+      ≡⟨ cong (_•_ (Θ₀ x)) (Functor.id F x) ⟩
+    Θ₀ x • id (F₀ x)
+      ≡⟨ id-r _ ⟩
+    Θ₀ x ∎
 
-  --⊙̂-unit-r : Θ ⊙̂ idNatTrans (idFunctor C) ≡₂ Θ
-  --⊙̂-unit-r x = ?
-
-open vertical-composition-unit public
+open composition-unit public
 
 
 module vertical-composition-associative {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Level}
@@ -96,6 +112,57 @@ module vertical-composition-associative {ℓ₁ ℓ₂ ℓ′₁ ℓ′₂ : Lev
   •̂-assoc x = assoc (Ψ₀ x) (Φ₀ x) (Θ₀ x)
 
 open vertical-composition-associative public
+
+
+
+module horizontal-composition-associative {ℓ₁ ℓ′₁ ℓ₂ ℓ′₂ ℓ₃ ℓ′₃ ℓ₄ ℓ′₄ : Level} 
+  {B : Category {ℓ₁} {ℓ′₁}}
+  {C : Category {ℓ₂} {ℓ′₂}}
+  {D : Category {ℓ₃} {ℓ′₃}}
+  {E : Category {ℓ₄} {ℓ′₄}}
+  {H H′ : Functor D E} (Θ : NatTrans H H′)
+  {G G′ : Functor C D} (Ψ : NatTrans G G′)
+  {F F′ : Functor B C} (Φ : NatTrans F F′) where
+
+  open Category E
+  open Category D hiding (assoc ; id-r ; id-l) renaming (_•_ to _•′_ ; id to id-D)
+
+  private
+    Θ₀ = NatTrans.component Θ
+    Ψ₀ = NatTrans.component Ψ
+    Φ₀ = NatTrans.component Φ
+
+    Θ-naturality = λ {x} {y} f → NatTrans.naturality Θ {x} {y} f
+    Ψ-naturality = λ {x} {y} f → NatTrans.naturality Ψ {x} {y} f
+    Φ-naturality = λ {x} {y} f → NatTrans.naturality Φ {x} {y} f
+
+    F₀ = Functor.obj F
+    F′₀ = Functor.obj F′
+    G₀ = Functor.obj G
+    G′₀ = Functor.obj G′
+    H₀ = Functor.obj H
+    H′₀ = Functor.obj H′
+
+    F₁ = λ {x} {y} f → Functor.hom F {x} {y} f 
+    F′₁ = λ {x} {y} f → Functor.hom F′ {x} {y} f
+    G₁ = λ {x} {y} f → Functor.hom G {x} {y} f
+    G′₁ = λ {x} {y} f → Functor.hom G′ {x} {y} f
+    H₁ = λ {x} {y} f → Functor.hom H {x} {y} f
+    H′₁ = λ {x} {y} f → Functor.hom H′ {x} {y} f
+
+  ⊙̂-assoc : ⊙-associator H′ G′ F′ •̂ (Θ ⊙̂ (Ψ ⊙̂ Φ)) •̂ ⊙-associator⁻¹ H G F ≡₂ Θ ⊙̂ Ψ ⊙̂ Φ
+  ⊙̂-assoc x = begin
+    (id (H′₀ (G′₀ (F′₀ x))) • (Θ₀ (G′₀ (F′₀ x)) • H₁ (Ψ₀ (F′₀ x) •′ G₁ (Φ₀ x)))) • id (H₀ (G₀ (F₀ x)))
+      ≡⟨ id-r _ ⟩
+    id (H′₀ (G′₀ (F′₀ x))) • (Θ₀ (G′₀ (F′₀ x)) • H₁ (Ψ₀ (F′₀ x) •′ G₁ (Φ₀ x)))
+      ≡⟨ id-l _ ⟩
+    Θ₀ (G′₀ (F′₀ x)) • H₁ (Ψ₀ (F′₀ x) •′ G₁ (Φ₀ x))
+      ≡⟨ cong (_•_ (Θ₀ (G′₀ (F′₀ x)))) (Functor.compose H (Ψ₀ (F′₀ x)) (G₁ (Φ₀ x))) ⟩
+    Θ₀ (G′₀ (F′₀ x)) • (H₁ (Ψ₀ (F′₀ x)) • H₁ (G₁ (Φ₀ x)))
+      ≡⟨  assoc _ _ _ ⟩
+    Θ₀ (G′₀ (F′₀ x)) • H₁ (Ψ₀ (F′₀ x)) • H₁ (G₁ (Φ₀ x)) ∎
+
+open horizontal-composition-associative public
 
 
 module horizontal-composition-compatible-left {ℓ₁ ℓ₂ ℓ₃ ℓ′₁ ℓ′₂ ℓ′₃ : Level} 

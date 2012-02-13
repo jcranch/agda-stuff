@@ -1,6 +1,29 @@
+-- The theory of categories. What we implement here is the most naive
+-- possible workable version: we have a Set of objects, and a Set of
+-- morphisms between any two objects.
+
+-- This is usable for categories where the morphisms are defined
+-- inductively, rather than functionally. For example, the category of
+-- vector spaces and abstract linear maps will not satisfy this
+-- definition, but a "concrete" model built using matrices as linear maps
+-- will certainly work.
+-- Clearly, most applications to computer algebra will involve categories
+-- of this sort.
+
+-- One downside is that this concept of category is not closed under
+-- various constructions that involve sets of functions. For example,
+-- given any explicit category K, we can define by hand the operation
+-- that takes another category C and associates to it the functor
+-- category Fun(K,C), but we can't do it uniformly for all K.
+
+-- A more heavy-duty approach would be to use Setoids for the morphisms;
+-- this involves a goodly amount more baggage.
+
+
 module Categories where
 
 open import Algebra.Structures
+import Data.Product
 open import Level
 open import Function using (flip)
 open import Relation.Binary.PropositionalEquality as PropEq using (_≡_)
@@ -26,7 +49,7 @@ record Category {ℓ ℓ′ : Level} : Set (suc ℓ ⊔ suc ℓ′) where
 
 module endomorphisms {ℓ ℓ′ : Level} {C : Category {ℓ} {ℓ′}} where
 
-  open import Data.Product
+  open Data.Product
 
   open Category C
 
@@ -104,6 +127,28 @@ module Iso {ℓ ℓ′ : Level} {C : Category {ℓ} {ℓ′}} where
 
 opposite : {ℓ ℓ′ : Level} → Category {ℓ} {ℓ′} → Category {ℓ} {ℓ′}
 opposite (makeCat obj hom id compose id-l id-r assoc) = makeCat obj (flip hom) id (flip compose) id-r id-l (λ f g h → PropEq.sym (assoc h g f))
+
+
+-- since epimorphisms are defined as monomorphisms in the opposite category,
+-- these facts about monomorphisms will work for epimorphisms just the same.
+module monomorphisms {ℓ ℓ′ : Level} (C : Category {ℓ} {ℓ′}) where
+
+  open Category C
+
+  monomorphism : {x y : obj} (f : hom x y) → Set (ℓ ⊔ ℓ′)
+  monomorphism {x} {y} f = {w : obj} (g₁ g₂ : hom w x) → f • g₁ ≡ f • g₂ → g₁ ≡ g₂
+
+  monomorphism-compose : {x y z : obj} (g : hom y z) (f : hom x y) → monomorphism g → monomorphism f → monomorphism (g • f)
+  monomorphism-compose g f g-mono f-mono h₁ h₂ e = f-mono h₁ h₂ (g-mono (f • h₁) (f • h₂) (PropEq.trans (assoc _ _ _) (PropEq.trans e (PropEq.sym (assoc _ _ _)))))
+
+  monomorphism-cancel : {x y z : obj} (g : hom y z) (f : hom x y) → monomorphism (g • f) → monomorphism f
+  monomorphism-cancel g f gf-mono h₁ h₂ e = gf-mono h₁ h₂ (PropEq.trans (PropEq.sym (assoc _ _ _)) (PropEq.trans (PropEq.cong (compose g) e) (assoc _ _ _)))
+
+open monomorphisms public
+
+
+epimorphism : {ℓ ℓ′ : Level} (C : Category {ℓ} {ℓ′}) {x y : Category.obj C} (f : Category.hom C x y) → Set (ℓ ⊔ ℓ′)
+epimorphism C f = monomorphism (opposite C) f
 
 
 

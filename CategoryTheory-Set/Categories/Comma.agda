@@ -5,7 +5,6 @@ open import Relation.Binary.PropositionalEquality
 
 open import Categories
 open import Functors
-open import Misc using (cong₃)
 open import NaturalTransformations
 
 
