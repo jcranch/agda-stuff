@@ -3,6 +3,5 @@
 *.aux
 *.log
 *.ptb
-*.tex
 *.pdf
 *.dvi
