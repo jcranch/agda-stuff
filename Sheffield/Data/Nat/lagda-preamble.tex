@@ -1,0 +1,45 @@
+\documentclass{article}
+\usepackage{hyperref}
+
+% The following packages are needed because unicode
+% is translated (using the next set of packages) to
+% latex commands. You may need more packages if you
+% use more unicode characters:
+
+\usepackage{amssymb}
+\usepackage{bbm}
+\usepackage{MnSymbol}
+
+\usepackage[greek,english]{babel}
+
+% This handles the translation of unicode to latex:
+
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage{autofe}
+
+\usepackage{fullpage}
+
+% Some characters that are not automatically defined
+% (you figure out by the latex compilation errors you get),
+% and you need to define:
+
+\DeclareUnicodeCharacter{8988}{\ensuremath{\ulcorner}}
+\DeclareUnicodeCharacter{8989}{\ensuremath{\urcorner}}
+\DeclareUnicodeCharacter{8803}{\ensuremath{\overline{\equiv}}}
+\DeclareUnicodeCharacter{8718}{\ensuremath{\blacksquare}}
+\DeclareUnicodeCharacter{8760}{\ensuremath{\dotminus}}
+
+% Add more as you need them (shouldn’t happen often).
+
+% Using “\newenvironment” to redefine verbatim to
+% be called “code” doesn’t always work properly. 
+% You can more reliably use:
+
+\usepackage{fancyvrb}
+
+\DefineVerbatimEnvironment
+  {code}{Verbatim}
+  {} % Add fancy options here if you like.
+
+% \newcommand{\wikiref}{2}{\href{http://wiki.portal.chalmers.se/agda/pmwiki.php?n=#1}{#2}}
