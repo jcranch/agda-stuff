@@ -1,0 +1,11 @@
+-- to do:-
+--   Kan extensions are respected equivalences
+--   uniqueness results
+--   Kan extensions really are extensions for fully faithful functors
+--   relationship with limits
+--   extending along identities
+--   extending along composites
+--   packaging that as a functor
+--   naturality of Kan extensions with comma categories
+--     application to functoriality of limits
+--   induced maps between Kan extensions, relationship with Kan extensions of diagrams
